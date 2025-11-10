@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Food Funding</string>
+    <string name="login">Login</string>
+    <string name="username">Username</string>
+    <string name="password">Password</string>
+    <string name="dont_have_account_register">Don\'t have an account? Register</string>
+    <string name="add_donation">Add Donation</string>
+    <string name="app_logo">Food Funding Logo</string>
+</resources>
