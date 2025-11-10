@@ -1,4 +1,4 @@
-package com.example.mad_project
+package com.example.mad_project.data.models
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity

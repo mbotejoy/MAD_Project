@@ -6,7 +6,7 @@ import android.os.Bundle
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
-import com.example.mad_project.Donation
+import com.example.mad_project.data.models.Donation
 import com.example.mad_project.R
 import com.google.android.filament.View
 import java.util.*

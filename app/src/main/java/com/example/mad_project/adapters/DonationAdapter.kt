@@ -7,7 +7,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import com.example.mad_project.Donation
+import com.example.mad_project.data.models.Donation
 import com.example.mad_project.R
 
 class DonationAdapter(

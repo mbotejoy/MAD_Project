@@ -1,4 +1,4 @@
-package com.example.mad_project
+package com.example.mad_project.data.network
 
 // network/ApiService.kt
 import retrofit2.Response

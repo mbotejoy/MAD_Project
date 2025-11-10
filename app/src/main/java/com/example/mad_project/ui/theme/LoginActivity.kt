@@ -9,7 +9,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
-import com.example.mad_project.MainActivity
+import com.example.mad_project.data.models.MainActivity
 import com.example.mad_project.R
 import com.google.android.material.textfield.TextInputEditText
 

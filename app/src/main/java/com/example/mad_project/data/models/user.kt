@@ -1,4 +1,7 @@
-package com.example.mad_project
+package com.example.mad_project.data.models
+
+class user {
+}
 
 data class User(
     val id: Int,

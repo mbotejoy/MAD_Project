@@ -1,5 +1,4 @@
-package com.example.mad_project
-
+package com.example.mad_project.data.network
 
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor

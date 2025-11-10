@@ -1,23 +1,25 @@
 // viewmodel/MainViewModel.kt
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.MutableLiveData
-import com.example.mad_project.AppRepository
-import com.example.mad_project.Donation
-import com.example.mad_project.MpesaPaymentRequest
-import com.example.mad_project.RegisterRequest
-import com.example.mad_project.User
+import com.example.mad_project.data.network.MpesaPaymentRequest
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
-class MainViewModel : ViewModel() {
-    private val repository = AppRepository
+class MainViewModel(application: Application) : AndroidViewModel(application) {
+    private val repository = AppRepository(application.applicationContext)
 
     // LiveData for UI observation
     val currentUser = MutableLiveData<User?>()
-    val donations = MutableLiveData<List<Donation>>()
     val isLoading = MutableLiveData<Boolean>()
     val errorMessage = MutableLiveData<String>()
     val successMessage = MutableLiveData<String>()
+
+    // Flows for database observations
+    val donations: Flow<List<Donation>> = repository.getDonationsFlow()
+    val availableDonations: Flow<List<Donation>> = repository.getAvailableDonationsFlow()
 
     // Authentication
     fun login(username: String, password: String) {
@@ -28,6 +30,8 @@ class MainViewModel : ViewModel() {
                     currentUser.value = result.data.user
                     errorMessage.value = null
                     successMessage.value = "Login successful!"
+                    // Load donations after login
+                    loadDonations()
                 }
                 is Result.Failure -> {
                     errorMessage.value = result.exception.message
@@ -56,20 +60,12 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    // Donations
+    // Donations with database support
     fun loadDonations() {
         viewModelScope.launch {
             isLoading.value = true
-            when (val result = repository.getDonations()) {
-                is Result.Success -> {
-                    donations.value = result.data
-                    errorMessage.value = null
-                }
-                is Result.Failure -> {
-                    errorMessage.value = result.exception.message
-                    donations.value = emptyList()
-                }
-            }
+            // This will trigger the flow to update
+            repository.getDonations()
             isLoading.value = false
         }
     }
@@ -79,8 +75,9 @@ class MainViewModel : ViewModel() {
             isLoading.value = true
             when (val result = repository.createDonation(donation)) {
                 is Result.Success -> {
-                    loadDonations() // Refresh list
                     successMessage.value = "Donation created successfully!"
+                    // Sync any unsynced donations
+                    repository.syncUnsyncedDonations()
                 }
                 is Result.Failure -> {
                     errorMessage.value = result.exception.message
@@ -88,6 +85,10 @@ class MainViewModel : ViewModel() {
             }
             isLoading.value = false
         }
+    }
+
+    fun getUserDonationsFlow(userId: Int): Flow<List<Donation>> {
+        return repository.getUserDonationsFlow(userId)
     }
 
     // MPESA Payment
@@ -98,6 +99,8 @@ class MainViewModel : ViewModel() {
                 MpesaPaymentRequest(phoneNumber, amount, donationId)
             )) {
                 is Result.Success -> {
+                    // Save transaction to local database
+                    repository.saveMpesaTransaction(result.data)
                     successMessage.value = "Payment initiated! Check your phone."
                 }
                 is Result.Failure -> {
@@ -112,10 +115,11 @@ class MainViewModel : ViewModel() {
         currentUser.value = null
         successMessage.value = "Logged out successfully"
     }
-}
 
-// Result sealed class
-sealed class Result<out T> {
-    data class Success<out T>(val data: T) : Result<T>()
-    data class Failure(val exception: Exception) : Result<Nothing>()
+    // Sync data when app starts or network available
+    fun syncData() {
+        viewModelScope.launch {
+            repository.syncUnsyncedDonations()
+        }
+    }
 }
