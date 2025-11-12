@@ -1,7 +1,6 @@
 package com.example.mad_project.data.models
 
-class Donation {
-}
+
 
 data class Donation(
     val id: Int,

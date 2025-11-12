@@ -1,15 +1,18 @@
-// ui/fragments/MyDonationsFragment.kt
+package com.example.mad_project.fragments
+
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
+import com.example.mad_project.ui.theme.viewmodel.MainViewModel
+import com.example.mad_project.R
+import com.example.mad_project.adapters.DonationAdapter
+import com.example.mad_project.data.models.Donation
 
 class MyDonationsFragment : Fragment() {
 
@@ -26,8 +29,12 @@ class MyDonationsFragment : Fragment() {
         val view = inflater.inflate(R.layout.fragment_donations, container, false)
         initializeViews(view)
         setupRecyclerView()
-        observeMyDonations()
         return view
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        observeMyDonations()
     }
 
     private fun initializeViews(view: View) {
@@ -44,18 +51,24 @@ class MyDonationsFragment : Fragment() {
     }
 
     private fun observeMyDonations() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.currentUser.value?.let { user ->
-                viewModel.getUserDonationsFlow(user.id).collectLatest { donations ->
-                    adapter.updateDonations(donations)
-                    tvEmpty.visibility = if (donations.isEmpty()) View.VISIBLE else View.GONE
-                }
-            }
+        // Observe donations and filter for current user
+        viewModel.donations.observe(viewLifecycleOwner) { allDonations ->
+            val myDonations = viewModel.myDonations
+            adapter.updateDonations(myDonations)
+            tvEmpty.visibility = if (myDonations.isEmpty()) View.VISIBLE else View.GONE
+        }
+
+        // Load donations if not already loaded
+        if (viewModel.donations.value.isNullOrEmpty()) {
+            viewModel.loadDonations()
         }
     }
 
     private fun showDonationDetails(donation: Donation) {
-        DonationDetailsDialog.newInstance(donation)
-            .show(parentFragmentManager, "donation_details")
+        Toast.makeText(
+            requireContext(),
+            "My Donation: ${donation.foodType}\nStatus: ${donation.status}",
+            Toast.LENGTH_LONG
+        ).show()
     }
 }

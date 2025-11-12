@@ -1,7 +1,8 @@
 package com.example.mad_project.ui.theme
 
 // ui/MainActivity.kt
-import MainViewModel
+
+import com.example.mad_project.viewmodel.MainViewModel
 import android.content.Intent
 import android.os.Bundle
 import android.view.Menu

@@ -9,7 +9,7 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="@color/primary_color"
+        android:background="primary_colour"
         android:theme="@style/ThemeOverlay.Material3.Dark.ActionBar"
         app:title="Food Funding" />
 
@@ -17,7 +17,7 @@
         android:id="@+id/tabLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/primary_color">
+        android:background="primary_colour">
 
         <com.google.android.material.tabs.TabItem
             android:layout_width="wrap_content"

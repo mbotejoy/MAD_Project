@@ -8,6 +8,10 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.mad_project.R
+import com.example.mad_project.adapters.DonationAdapter
+import com.example.mad_project.data.models.Donation
+import com.example.mad_project.ui.theme.DonationDetailsDialog
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -58,3 +62,5 @@ class AvailableDonationsFragment : Fragment() {
             .show(parentFragmentManager, "donation_details")
     }
 }
+
+
