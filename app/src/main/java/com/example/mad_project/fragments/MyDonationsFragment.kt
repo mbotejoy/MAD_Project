@@ -7,12 +7,14 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.mad_project.ui.theme.viewmodel.MainViewModel
 import com.example.mad_project.R
 import com.example.mad_project.adapters.DonationAdapter
 import com.example.mad_project.data.models.Donation
+import com.example.mad_project.viewmodel.MainViewModel
+import kotlinx.coroutines.launch
 
 class MyDonationsFragment : Fragment() {
 
@@ -51,11 +53,11 @@ class MyDonationsFragment : Fragment() {
     }
 
     private fun observeMyDonations() {
-        // Observe donations and filter for current user
-        viewModel.donations.observe(viewLifecycleOwner) { allDonations ->
-            val myDonations = viewModel.myDonations
-            adapter.updateDonations(myDonations)
-            tvEmpty.visibility = if (myDonations.isEmpty()) View.VISIBLE else View.GONE
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.myDonations.observe(viewLifecycleOwner) { myDonations ->
+                adapter.updateDonations(myDonations)
+                tvEmpty.visibility = if (myDonations.isEmpty()) View.VISIBLE else View.GONE
+            }
         }
 
         // Load donations if not already loaded

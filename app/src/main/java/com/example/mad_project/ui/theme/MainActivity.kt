@@ -9,6 +9,10 @@ import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.Image
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.res.painterResource
 import androidx.lifecycle.ViewModelProvider
 import androidx.viewpager2.widget.ViewPager2
 import com.example.mad_project.R
@@ -35,6 +39,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initializeViews() {
+        findViewById<ComposeView>(R.id.logo_compose_view).setContent {
+            Image(
+                painter = painterResource(id = R.drawable.our_logo),
+                contentDescription = "App Logo"
+            )
+        }
         viewPager = findViewById(R.id.viewPager)
         tabLayout = findViewById(R.id.tabLayout)
         fabAddDonation = findViewById(R.id.fabAddDonation)

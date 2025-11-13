@@ -1,19 +1,18 @@
-// ui/fragments/AvailableDonationsFragment.kt
+package com.example.mad_project.fragments
+
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mad_project.R
 import com.example.mad_project.adapters.DonationAdapter
 import com.example.mad_project.data.models.Donation
 import com.example.mad_project.ui.theme.DonationDetailsDialog
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
 import com.example.mad_project.viewmodel.MainViewModel
 
 class AvailableDonationsFragment : Fragment() {
@@ -49,12 +48,10 @@ class AvailableDonationsFragment : Fragment() {
     }
 
     private fun observeDonations() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.availableDonations.collectLatest { donations ->
-                adapter.updateDonations(donations)
-                tvEmpty.visibility = if (donations.isEmpty()) View.VISIBLE else View.GONE
-            }
-        }
+        viewModel.availableDonations.observe(viewLifecycleOwner, Observer { donations ->
+            adapter.updateDonations(donations)
+            tvEmpty.visibility = if (donations.isEmpty()) View.VISIBLE else View.GONE
+        })
     }
 
     private fun showDonationDetails(donation: Donation) {
@@ -63,5 +60,3 @@ class AvailableDonationsFragment : Fragment() {
             .show(parentFragmentManager, "donation_details")
     }
 }
-
-

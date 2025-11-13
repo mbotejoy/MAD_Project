@@ -159,6 +159,38 @@
 
         </com.google.android.material.textfield.TextInputLayout>
 
+        <!-- User Type -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="I am a:"
+            android:textSize="16sp"
+            android:textColor="@color/primary_color"
+            android:layout_marginBottom="8dp"/>
+
+        <RadioGroup
+            android:id="@+id/radioGroup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="16dp">
+
+            <RadioButton
+                android:id="@+id/radioDonor"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Donor"
+                android:checked="true"/>
+
+            <RadioButton
+                android:id="@+id/radioBeneficiary"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Beneficiary"
+                android:layout_marginStart="16dp"/>
+
+        </RadioGroup>
+
         <!-- Phone Number -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/phoneLayout"

@@ -45,23 +45,18 @@ class MainViewModel : ViewModel() {
 
     // Computed property for user's donations
     val myDonations: LiveData<List<Donation>> = MediatorLiveData<List<Donation>>().apply {
-        addSource(_donations) { donationsList ->
-            val userId = _currentUser.value?.id
-            value = if (userId != null) {
-                donationsList.filter { it.donor == userId }
-            } else {
-                emptyList()
-            }
-        }
-        addSource(_currentUser) { user ->
+        val updateMyDonations = {
             val currentDonations = _donations.value ?: emptyList()
-            val userId = user?.id
+            val userId = _currentUser.value?.id
             value = if (userId != null) {
                 currentDonations.filter { it.donor == userId }
             } else {
                 emptyList()
             }
         }
+
+        addSource(_donations) { updateMyDonations() }
+        addSource(_currentUser) { updateMyDonations() }
     }
 
     // Authentication methods

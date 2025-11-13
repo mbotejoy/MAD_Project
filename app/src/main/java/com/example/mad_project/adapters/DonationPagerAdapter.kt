@@ -2,7 +2,7 @@ package com.example.mad_project.adapters
 
 
 
-import AvailableDonationsFragment
+import com.example.mad_project.fragments.AvailableDonationsFragment
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.viewpager2.adapter.FragmentStateAdapter

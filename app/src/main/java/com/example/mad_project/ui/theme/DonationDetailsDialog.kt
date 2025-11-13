@@ -18,7 +18,7 @@ class DonationDetailsDialog : DialogFragment() {
 
         fun newInstance(donation: Donation): DonationDetailsDialog {
             val args = Bundle().apply {
-                putSerializable(ARG_DONATION, donation)
+                putParcelable(ARG_DONATION, donation)
             }
             return DonationDetailsDialog().apply {
                 arguments = args
@@ -30,7 +30,7 @@ class DonationDetailsDialog : DialogFragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        donation = arguments?.getSerializable(ARG_DONATION) as Donation
+        donation = arguments?.getParcelable<Donation>(ARG_DONATION) as Donation
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {

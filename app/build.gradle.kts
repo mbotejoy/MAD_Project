@@ -4,15 +4,17 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     id("com.google.gms.google-services")
     id("com.google.devtools.ksp") version "2.0.21-1.0.27"
+    id("kotlin-parcelize")
 }
 
+/*
 configurations {
     all {
         exclude(group = "org.jetbrains", module = "annotations")
         exclude(group = "com.intellij", module = "annotations")
     }
 }
-
+*/
 android {
     namespace = "com.example.mad_project"
     compileSdk = 36
@@ -65,6 +67,7 @@ dependencies {
     // Lifecycle - Update to more recent versions
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.3")
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.8.3")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.3")
     implementation("androidx.activity:activity-ktx:1.9.0")
 
     // Navigation - Update to more recent versions

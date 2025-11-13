@@ -12,18 +12,18 @@
         android:orientation="vertical">
 
         <ImageView
-            android:layout_width="120dp"
+            android:layout_width="151dp"
             android:layout_height="120dp"
             android:layout_gravity="center"
             android:layout_marginTop="50dp"
             android:layout_marginBottom="30dp"
-            android:src="@drawable/ic_food_donation"
-            android:contentDescription="App logo" />
+            android:contentDescription="App logo"
+            android:src="@drawable/our_logo" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Food Funding"
+            android:text="@string/nourished_with_joy_and_grace"
             android:textSize="32sp"
             android:textStyle="bold"
             android:gravity="center"
