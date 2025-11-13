@@ -36,8 +36,8 @@
             app:boxCornerRadiusTopStart="12dp"
             app:boxStrokeColor="@color/primary_color"
             app:hintTextColor="@color/primary_color"
-            app:startIconDrawable="@android:drawable/ic_menu_edit"
             app:startIconTint="@color/primary_color">
+            <!-- app:startIconDrawable attribute removed -->
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etUsername"
@@ -63,8 +63,8 @@
             app:boxCornerRadiusTopStart="12dp"
             app:boxStrokeColor="@color/primary_color"
             app:hintTextColor="@color/primary_color"
-            app:startIconDrawable="@android:drawable/ic_dialog_email"
             app:startIconTint="@color/primary_color">
+            <!-- app:startIconDrawable attribute removed -->
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etEmail"
@@ -90,8 +90,8 @@
             app:boxCornerRadiusTopStart="12dp"
             app:boxStrokeColor="@color/primary_color"
             app:hintTextColor="@color/primary_color"
-            app:startIconDrawable="@android:drawable/ic_lock"
             app:startIconTint="@color/primary_color">
+            <!-- app:startIconDrawable attribute removed -->
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etPassword"
@@ -117,8 +117,8 @@
             app:boxCornerRadiusTopStart="12dp"
             app:boxStrokeColor="@color/primary_color"
             app:hintTextColor="@color/primary_color"
-            app:startIconDrawable="@android:drawable/ic_menu_myplaces"
             app:startIconTint="@color/primary_color">
+            <!-- app:startIconDrawable attribute removed -->
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etFirstName"
@@ -144,8 +144,8 @@
             app:boxCornerRadiusTopStart="12dp"
             app:boxStrokeColor="@color/primary_color"
             app:hintTextColor="@color/primary_color"
-            app:startIconDrawable="@android:drawable/ic_menu_myplaces"
             app:startIconTint="@color/primary_color">
+            <!-- app:startIconDrawable attribute removed -->
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etLastName"
@@ -171,8 +171,8 @@
             app:boxCornerRadiusTopStart="12dp"
             app:boxStrokeColor="@color/primary_color"
             app:hintTextColor="@color/primary_color"
-            app:startIconDrawable="@android:drawable/ic_menu_call"
             app:startIconTint="@color/primary_color">
+            <!-- app:startIconDrawable attribute removed -->
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etPhone"

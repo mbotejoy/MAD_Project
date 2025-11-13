@@ -1,11 +1,16 @@
 package com.example.mad_project.viewmodel
 
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MediatorLiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.MutableLiveData
+import com.example.mad_project.data.models.Donation
+import com.example.mad_project.data.models.MpesaPaymentRequest
+import com.example.mad_project.data.models.RegisterRequest
+import com.example.mad_project.data.models.User
+import com.example.mad_project.data.repository.AppRepository
 import kotlinx.coroutines.launch
-import com.example.mad_project.data.models.*
-import com.example.mad_project.repository.AppRepository
 
 class MainViewModel : ViewModel() {
 
@@ -13,49 +18,71 @@ class MainViewModel : ViewModel() {
 
     // LiveData for current user
     private val _currentUser = MutableLiveData<User?>()
-    val currentUser: MutableLiveData<User?> get() = _currentUser
+    val currentUser: LiveData<User?> get() = _currentUser
 
     // LiveData for all donations
-    private val _donations = MutableLiveData<List<Donation>>()
-    val donations: MutableLiveData<List<Donation>> get() = _donations
+    private val _donations = MutableLiveData<List<Donation>>(emptyList())
+    val donations: LiveData<List<Donation>> get() = _donations
 
     // Loading state
     private val _isLoading = MutableLiveData<Boolean>()
-    val isLoading: MutableLiveData<Boolean> get() = _isLoading
+    val isLoading: LiveData<Boolean> get() = _isLoading
 
     // Error messages
     private val _errorMessage = MutableLiveData<String?>()
-    val errorMessage: MutableLiveData<String> get() = _errorMessage as MutableLiveData<String>
+    val errorMessage: LiveData<String?> get() = _errorMessage
 
     // Success messages
     private val _successMessage = MutableLiveData<String?>()
-    val successMessage: MutableLiveData<String> get() = _successMessage as MutableLiveData<String>
+    val successMessage: LiveData<String?> get() = _successMessage
 
     // Computed property for available donations
-    val availableDonations: List<Donation>
-        get() = _donations.value?.filter { it.status == "available" } ?: emptyList()
+    val availableDonations: LiveData<List<Donation>> = MediatorLiveData<List<Donation>>().apply {
+        addSource(_donations) { donationsList ->
+            value = donationsList.filter { it.status == "available" }
+        }
+    }
 
     // Computed property for user's donations
-    val myDonations: List<Donation>
-        get() = _donations.value?.filter { it.donor == _currentUser.value?.id } ?: emptyList()
+    val myDonations: LiveData<List<Donation>> = MediatorLiveData<List<Donation>>().apply {
+        addSource(_donations) { donationsList ->
+            val userId = _currentUser.value?.id
+            value = if (userId != null) {
+                donationsList.filter { it.donor == userId }
+            } else {
+                emptyList()
+            }
+        }
+        addSource(_currentUser) { user ->
+            val currentDonations = _donations.value ?: emptyList()
+            val userId = user?.id
+            value = if (userId != null) {
+                currentDonations.filter { it.donor == userId }
+            } else {
+                emptyList()
+            }
+        }
+    }
 
     // Authentication methods
     fun login(username: String, password: String) {
         _isLoading.value = true
         _errorMessage.value = null
         viewModelScope.launch {
-            when (val result = repository.login(username, password)) {
-                is AppRepository.RepositoryResult.Success -> {
-                    _currentUser.value = result.data.user
-                    _successMessage.value = result.data.message ?: "Login successful!"
-                    loadDonations() // Load donations after login
-                }
-                is AppRepository.RepositoryResult.Error -> {
+            try {
+                val result = repository.login(username, password)
+                if (result is AppRepository.RepositoryResult.Success<*>) {
+                    _currentUser.value = result.data as User?
+                    _successMessage.value = "Login successful!"
+                    loadDonations()
+                } else if (result is AppRepository.RepositoryResult.Error) {
                     _errorMessage.value = result.message
-                    _currentUser.value = null
                 }
+            } catch (e: Exception) {
+                _errorMessage.value = "Login failed: ${e.message}"
+            } finally {
+                _isLoading.value = false
             }
-            _isLoading.value = false
         }
     }
 
@@ -63,17 +90,19 @@ class MainViewModel : ViewModel() {
         _isLoading.value = true
         _errorMessage.value = null
         viewModelScope.launch {
-            when (val result = repository.register(registerRequest)) {
-                is AppRepository.RepositoryResult.Success -> {
-                    _currentUser.value = result.data.user
-                    _successMessage.value = result.data.message ?: "Registration successful!"
-                }
-                is AppRepository.RepositoryResult.Error -> {
+            try {
+                val result = repository.register(registerRequest)
+                if (result is AppRepository.RepositoryResult.Success<*>) {
+                    _currentUser.value = result.data as User?
+                    _successMessage.value = "Registration successful!"
+                } else if (result is AppRepository.RepositoryResult.Error) {
                     _errorMessage.value = result.message
-                    _currentUser.value = null
                 }
+            } catch (e: Exception) {
+                _errorMessage.value = "Registration failed: ${e.message}"
+            } finally {
+                _isLoading.value = false
             }
-            _isLoading.value = false
         }
     }
 
@@ -82,16 +111,18 @@ class MainViewModel : ViewModel() {
         _isLoading.value = true
         _errorMessage.value = null
         viewModelScope.launch {
-            when (val result = repository.getDonations()) {
-                is AppRepository.RepositoryResult.Success -> {
-                    _donations.value = result.data
-                }
-                is AppRepository.RepositoryResult.Error -> {
+            try {
+                val result = repository.getDonations()
+                if (result is AppRepository.RepositoryResult.Success<*>) {
+                    _donations.value = result.data as List<Donation>?
+                } else if (result is AppRepository.RepositoryResult.Error) {
                     _errorMessage.value = result.message
-                    _donations.value = emptyList()
                 }
+            } catch (e: Exception) {
+                _errorMessage.value = "Failed to load donations: ${e.message}"
+            } finally {
+                _isLoading.value = false
             }
-            _isLoading.value = false
         }
     }
 
@@ -99,33 +130,39 @@ class MainViewModel : ViewModel() {
         _isLoading.value = true
         _errorMessage.value = null
         viewModelScope.launch {
-            when (val result = repository.createDonation(donation)) {
-                is AppRepository.RepositoryResult.Success -> {
-                    loadDonations() // Refresh the list
+            try {
+                val result = repository.createDonation(donation)
+                if (result is AppRepository.RepositoryResult.Success<*>) {
+                    loadDonations()
                     _successMessage.value = "Donation created successfully!"
-                }
-                is AppRepository.RepositoryResult.Error -> {
+                } else if (result is AppRepository.RepositoryResult.Error) {
                     _errorMessage.value = result.message
                 }
+            } catch (e: Exception) {
+                _errorMessage.value = "Failed to create donation: ${e.message}"
+            } finally {
+                _isLoading.value = false
             }
-            _isLoading.value = false
         }
     }
 
-    fun updateDonation(donation: Donation) {
+    fun updateDonation(donationId: Int, donation: Donation) {
         _isLoading.value = true
         _errorMessage.value = null
         viewModelScope.launch {
-            when (val result = repository.updateDonation(donation.id, donation)) {
-                is AppRepository.RepositoryResult.Success -> {
-                    loadDonations() // Refresh the list
+            try {
+                val result = repository.updateDonation(donationId, donation)
+                if (result is AppRepository.RepositoryResult.Success<*>) {
+                    loadDonations()
                     _successMessage.value = "Donation updated successfully!"
-                }
-                is AppRepository.RepositoryResult.Error -> {
+                } else if (result is AppRepository.RepositoryResult.Error) {
                     _errorMessage.value = result.message
                 }
+            } catch (e: Exception) {
+                _errorMessage.value = "Failed to update donation: ${e.message}"
+            } finally {
+                _isLoading.value = false
             }
-            _isLoading.value = false
         }
     }
 
@@ -134,17 +171,20 @@ class MainViewModel : ViewModel() {
         _isLoading.value = true
         _errorMessage.value = null
         viewModelScope.launch {
-            when (val result = repository.initiateMpesaPayment(
-                MpesaPaymentRequest(phoneNumber, amount, donationId)
-            )) {
-                is AppRepository.RepositoryResult.Success -> {
+            try {
+                val result = repository.initiateMpesaPayment(
+                    MpesaPaymentRequest(phoneNumber, amount, donationId)
+                )
+                if (result is AppRepository.RepositoryResult.Success<*>) {
                     _successMessage.value = "Payment initiated! Check your phone."
-                }
-                is AppRepository.RepositoryResult.Error -> {
+                } else if (result is AppRepository.RepositoryResult.Error) {
                     _errorMessage.value = result.message
                 }
+            } catch (e: Exception) {
+                _errorMessage.value = "Payment failed: ${e.message}"
+            } finally {
+                _isLoading.value = false
             }
-            _isLoading.value = false
         }
     }
 
@@ -159,17 +199,15 @@ class MainViewModel : ViewModel() {
         _successMessage.value = "Logged out successfully"
     }
 
-    // Clear messages
     fun clearMessages() {
         _errorMessage.value = null
         _successMessage.value = null
     }
 
-    // Load sample data for testing (remove this when your API is ready)
+    // Load sample data for testing
     fun loadSampleData() {
         _isLoading.value = true
         viewModelScope.launch {
-            // Simulate network delay
             kotlinx.coroutines.delay(1000)
 
             val sampleDonations = listOf(
@@ -194,17 +232,6 @@ class MainViewModel : ViewModel() {
                     location = "Kisumu",
                     createdAt = "2024-01-16",
                     status = "available"
-                ),
-                Donation(
-                    id = 3,
-                    donor = 1,
-                    amount = 100.0,
-                    description = "Grains and cereals",
-                    foodType = "Grains",
-                    quantity = 15,
-                    location = "Mombasa",
-                    createdAt = "2024-01-14",
-                    status = "claimed"
                 )
             )
 

@@ -1,10 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
-
+<resources>
     <color name="primary_color">#4CAF50</color>
     <color name="primary_dark">#388E3C</color>
     <color name="primary_light">#C8E6C9</color>
     <color name="white">#FFFFFF</color>
-    <color name="holor_red_dark"></color>
+    <color name="accent_color">#FF4081</color>
+    <color name="green">#4CAF50</color>
 
+    <!-- Fix the typo in holo_red_dark and add proper color -->
+    <color name="holo_red_dark">#D32F2F</color>
+
+    <!-- Add these missing colors that your layouts reference -->
+    <color name="primary_colour">#4CAF50</color> <!-- Note: different spelling -->
+    <color name="black">#FF000000</color>
 </resources>

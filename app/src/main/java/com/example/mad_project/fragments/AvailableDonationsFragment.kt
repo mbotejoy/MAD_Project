@@ -14,6 +14,7 @@ import com.example.mad_project.data.models.Donation
 import com.example.mad_project.ui.theme.DonationDetailsDialog
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import com.example.mad_project.viewmodel.MainViewModel
 
 class AvailableDonationsFragment : Fragment() {
 

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "787292088732",
+    "project_id": "nourished-with-joy-and-grace",
+    "storage_bucket": "nourished-with-joy-and-grace.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:787292088732:android:53cd85ff2244eec041c059",
+        "android_client_info": {
+          "package_name": "com.example.mad_project"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCvJdtdWpj-O4FhN_g479pjxkk5yDqN8RY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

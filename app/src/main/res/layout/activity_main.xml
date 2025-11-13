@@ -9,15 +9,13 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="primary_colour"
-        android:theme="@style/ThemeOverlay.Material3.Dark.ActionBar"
-        app:title="Food Funding" />
+        android:background="@color/primary_colour" />
 
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/tabLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="primary_colour">
+        android:background="@color/primary_colour">  <!-- Fixed: added @color/ -->
 
         <com.google.android.material.tabs.TabItem
             android:layout_width="wrap_content"
@@ -44,7 +42,7 @@
         android:layout_gravity="end|bottom"
         android:layout_margin="16dp"
         android:src="@android:drawable/ic_input_add"
-        android:contentDescription="@string/add_donation"
+        android:contentDescription="Add donation"
         app:tint="@android:color/white" />
 
 </LinearLayout>
