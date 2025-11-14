@@ -1,6 +1,5 @@
 package com.example.mad_project.data.models
 
-import com.example.mad_project.data.models.*
 import retrofit2.Response
 
 class AppRepository {

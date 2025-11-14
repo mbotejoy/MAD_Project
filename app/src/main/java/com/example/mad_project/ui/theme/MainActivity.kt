@@ -32,6 +32,11 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        val userId = intent.getStringExtra("USER_ID")
+        // You can now use this userId to fetch user-specific data or for other purposes
+        // For now, we'll just toast it to show it's being received.
+        Toast.makeText(this, "Logged in with user ID: $userId", Toast.LENGTH_SHORT).show()
+
         initializeViews()
         setupViewModels()
         setupViewPager()

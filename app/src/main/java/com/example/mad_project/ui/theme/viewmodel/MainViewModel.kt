@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-
+import com.example.mad_project.data.models.User
 data class AuthState(
     val isLoading: Boolean = false,
     val isSuccess: Boolean = false,
@@ -21,7 +21,7 @@ data class AuthState(
 )
 
 data class UserState(
-    val id: Any,
+    val id: Int,
     val email: String,
     val name: String,
     val token: String?
@@ -43,16 +43,20 @@ class AuthViewModel : ViewModel() {
                 if (response.isSuccessful) {
                     response.body()?.let { registerResponse ->
                         if (registerResponse.status == "success") {
-                            // Registration successful
-                            _authState.value = AuthState(
-                                isSuccess = true,
-                                user = UserState(
-                                    id = registerResponse.user.id,
-                                    email = registerResponse.user.email,
-                                    name = registerResponse.user.username ?: "",
-                                    token = "" // No token in register response
+                            registerResponse.user?.let { user ->
+                                // Registration successful
+                                _authState.value = AuthState(
+                                    isSuccess = true,
+                                    user = UserState(
+                                        id = user.id,
+                                        email = user.email,
+                                        name = user.username ?: "",
+                                        token = "" // No token in register response
+                                    )
                                 )
-                            )
+                            } ?: run {
+                                _authState.value = AuthState(error = "Registration successful, but user data is missing.")
+                            }
                         } else {
                             _authState.value = AuthState(
                                 error = registerResponse.message ?: "Registration failed"
@@ -83,25 +87,29 @@ class AuthViewModel : ViewModel() {
     }
 
     // Login function
-    fun loginUser(email: String, password: String) {
+    fun loginUser(usernameOrEmail: String, password: String) {
         viewModelScope.launch {
             _authState.value = AuthState(isLoading = true)
             try {
-                val response = repository.login(LoginRequest(email, password))
+                val response = repository.login(LoginRequest(usernameOrEmail, password))
 
                 if (response.isSuccessful) {
                     response.body()?.let { loginResponse ->
-                        if (loginResponse.token == "success") {
-                            // Login successful
-                            _authState.value = AuthState(
-                                isSuccess = true,
-                                user = UserState(
-                                    id = loginResponse.user?.id ?: "" ,
-                                    email = loginResponse.user?.email ?: "",
-                                    name = loginResponse.user?.username ?: "",
-                                    token = loginResponse.token ?: ""
+                        if (loginResponse.status == "success") {
+                            loginResponse.user?.let { user ->
+                                // Login successful
+                                _authState.value = AuthState(
+                                    isSuccess = true,
+                                    user = UserState(
+                                        id = user.id,
+                                        email = user.email,
+                                        name = user.username ?: "",
+                                        token = loginResponse.token ?: ""
+                                    )
                                 )
-                            )
+                            } ?: run {
+                                _authState.value = AuthState(error = "Login successful, but user data is missing.")
+                            }
                         } else {
                             // Business logic error from server
                             _authState.value = AuthState(

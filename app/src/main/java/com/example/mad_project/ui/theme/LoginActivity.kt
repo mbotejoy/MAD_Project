@@ -49,15 +49,15 @@ class LoginActivity : AppCompatActivity() {
 
     private fun setupClickListeners() {
         btnLogin.setOnClickListener {
-            val username = etUsername.text.toString().trim()
+            val email = etUsername.text.toString().trim() // Change variable name to email
             val password = etPassword.text.toString().trim()
 
-            if (username.isEmpty() || password.isEmpty()) {
+            if (email.isEmpty() || password.isEmpty()) {
                 showError("Please fill in all fields")
                 return@setOnClickListener
             }
 
-            viewModel.loginUser(username, password)
+            viewModel.loginUser(email, password) // Now passing email
         }
         tvRegister.setOnClickListener {
             val intent = Intent(this, RegisterActivity::class.java)
@@ -76,11 +76,13 @@ class LoginActivity : AppCompatActivity() {
                 } else {
                     hideError()
                 }
+                // Add detailed logging
+                println("AUTH STATE - isLoading: ${authState.isLoading}, isSuccess: ${authState.isSuccess}, user: ${authState.user}")
 
-                if (authState.isSuccess) {
+                if (authState.isSuccess && authState.user != null) {
                     Toast.makeText(this@LoginActivity, "Login Successful", Toast.LENGTH_SHORT).show()
                     val intent = Intent(this@LoginActivity, MainActivity::class.java)
-                    intent.putExtra("USER_ID", authState.user?.id.toString())
+                    intent.putExtra("USER_ID", authState.user.id.toString())
                     startActivity(intent)
                     finish()
                 }
