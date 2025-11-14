@@ -1,12 +1,13 @@
 package com.example.mad_project.ui.theme.viewmodel
 
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mad_project.data.models.AppRepository
+import com.example.mad_project.data.models.Donation
 import com.example.mad_project.data.models.LoginRequest
 import com.example.mad_project.data.models.RegisterRequest
-import com.example.mad_project.data.models.LoginResponse
-import com.example.mad_project.data.models.RegisterResponse
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,7 +21,7 @@ data class AuthState(
 )
 
 data class UserState(
-    val id: Int,
+    val id: Any,
     val email: String,
     val name: String,
     val token: String?
@@ -33,18 +34,11 @@ class AuthViewModel : ViewModel() {
     val authState: StateFlow<AuthState> = _authState.asStateFlow()
 
     // Registration function
-    fun registerUser(email: String, password: String, name: String) {
+    fun registerUser(registerRequest: RegisterRequest) {
         viewModelScope.launch {
             _authState.value = AuthState(isLoading = true)
             try {
-                val response = repository.register(RegisterRequest(
-                    username, email, password,
-                    firstName = TODO(),
-                    lastName = TODO(),
-                    phoneNumber = TODO(),
-                    isDonor = TODO(),
-                    isBeneficiary = TODO()
-                ))
+                val response = repository.register(registerRequest)
 
                 if (response.isSuccessful) {
                     response.body()?.let { registerResponse ->
@@ -102,9 +96,9 @@ class AuthViewModel : ViewModel() {
                             _authState.value = AuthState(
                                 isSuccess = true,
                                 user = UserState(
-                                    id = loginResponse.user.id,
-                                    email = loginResponse.user.email,
-                                    name = loginResponse.user.username ?: "",
+                                    id = loginResponse.user?.id ?: "" ,
+                                    email = loginResponse.user?.email ?: "",
+                                    name = loginResponse.user?.username ?: "",
                                     token = loginResponse.token ?: ""
                                 )
                             )
@@ -152,5 +146,61 @@ class AuthViewModel : ViewModel() {
     // Logout function
     fun logout() {
         _authState.value = AuthState()
+    }
+}
+
+class MainViewModel : ViewModel() {
+
+    private val repository = AppRepository()
+
+    private val _availableDonations = MutableLiveData<List<Donation>>()
+    val availableDonations: LiveData<List<Donation>> = _availableDonations
+
+    private val _isLoading = MutableLiveData<Boolean>()
+    val isLoading: LiveData<Boolean> = _isLoading
+
+    private val _successMessage = MutableLiveData<String>()
+    val successMessage: LiveData<String> = _successMessage
+
+    private val _errorMessage = MutableLiveData<String>()
+    val errorMessage: LiveData<String> = _errorMessage
+
+    private val _currentUser = MutableLiveData<UserState>()
+    val currentUser: LiveData<UserState> = _currentUser
+
+    init {
+        loadDonations()
+    }
+
+    fun loadDonations() {
+        viewModelScope.launch {
+            try {
+                val response = repository.getDonations()
+                if (response.isSuccessful) {
+                    _availableDonations.postValue(response.body())
+                }
+            } catch (e: Exception) {
+                // Handle error
+            }
+        }
+    }
+
+    fun createDonation(donation: Donation) {
+        viewModelScope.launch {
+            _isLoading.postValue(true)
+            try {
+                val response = repository.createDonation(donation)
+                if (response.isSuccessful) {
+                    _successMessage.postValue("Donation created successfully")
+                    loadDonations() // Refresh the list of donations
+                } else {
+                    _errorMessage.postValue("Failed to create donation")
+                }
+            } catch (e: Exception) {
+                _errorMessage.postValue("An error occurred: ${e.message}")
+            } finally {
+                _isLoading.postValue(false)
+            }
+        }
     }
 }

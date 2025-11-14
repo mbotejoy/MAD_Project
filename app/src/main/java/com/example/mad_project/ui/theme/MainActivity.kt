@@ -1,8 +1,5 @@
 package com.example.mad_project.ui.theme
 
-// ui/MainActivity.kt
-
-import com.example.mad_project.ui.theme.viewmodel.MainViewModel
 import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
@@ -17,13 +14,16 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.viewpager2.widget.ViewPager2
 import com.example.mad_project.R
 import com.example.mad_project.adapters.DonationPagerAdapter
+import com.example.mad_project.ui.theme.viewmodel.AuthViewModel
+import com.example.mad_project.ui.theme.viewmodel.MainViewModel
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var viewModel: MainViewModel
+    private lateinit var mainViewModel: MainViewModel
+    private lateinit var authViewModel: AuthViewModel
     private lateinit var viewPager: ViewPager2
     private lateinit var tabLayout: TabLayout
     private lateinit var fabAddDonation: FloatingActionButton
@@ -33,7 +33,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         initializeViews()
-        setupViewModel()
+        setupViewModels()
         setupViewPager()
         setupClickListeners()
     }
@@ -50,9 +50,10 @@ class MainActivity : AppCompatActivity() {
         fabAddDonation = findViewById(R.id.fabAddDonation)
     }
 
-    private fun setupViewModel() {
-        viewModel = ViewModelProvider(this)[MainViewModel::class.java]
-        viewModel.loadDonations()
+    private fun setupViewModels() {
+        mainViewModel = ViewModelProvider(this)[MainViewModel::class.java]
+        authViewModel = ViewModelProvider(this)[AuthViewModel::class.java]
+        mainViewModel.loadDonations()
     }
 
     private fun setupViewPager() {
@@ -83,8 +84,9 @@ class MainActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.menu_logout -> {
-                viewModel.logout()
+                authViewModel.logout()
                 val intent = Intent(this, LoginActivity::class.java)
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 startActivity(intent)
                 finish()
                 true

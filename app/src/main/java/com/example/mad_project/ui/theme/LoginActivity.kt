@@ -8,14 +8,15 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
-import com.example.mad_project.data.models.MainActivity
+import androidx.lifecycle.lifecycleScope
 import com.example.mad_project.R
-import com.example.mad_project.ui.theme.viewmodel.MainViewModel
+import com.example.mad_project.ui.theme.viewmodel.AuthViewModel
 import com.google.android.material.textfield.TextInputEditText
+import kotlinx.coroutines.launch
 
 class LoginActivity : AppCompatActivity() {
 
-    private lateinit var viewModel: MainViewModel
+    private lateinit var viewModel: AuthViewModel
     private lateinit var etUsername: TextInputEditText
     private lateinit var etPassword: TextInputEditText
     private lateinit var btnLogin: Button
@@ -43,7 +44,7 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun setupViewModel() {
-        viewModel = ViewModelProvider(this)[MainViewModel::class.java]
+        viewModel = ViewModelProvider(this)[AuthViewModel::class.java]
     }
 
     private fun setupClickListeners() {
@@ -56,7 +57,7 @@ class LoginActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            viewModel.login(username, password)
+            viewModel.loginUser(username, password)
         }
         tvRegister.setOnClickListener {
             val intent = Intent(this, RegisterActivity::class.java)
@@ -65,30 +66,24 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun observeViewModel() {
-        viewModel.isLoading.observe(this) { isLoading ->
-            progressBar.visibility = if (isLoading) android.view.View.VISIBLE else android.view.View.GONE
-            btnLogin.isEnabled = !isLoading
-        }
+        lifecycleScope.launch {
+            viewModel.authState.collect { authState ->
+                progressBar.visibility = if (authState.isLoading) android.view.View.VISIBLE else android.view.View.GONE
+                btnLogin.isEnabled = !authState.isLoading
 
-        viewModel.errorMessage.observe(this) { errorMessage ->
-            if (!errorMessage.isNullOrEmpty()) {
-                showError(errorMessage)
-            }
-        }
+                if (authState.error != null) {
+                    showError(authState.error)
+                } else {
+                    hideError()
+                }
 
-        viewModel.successMessage.observe(this) { successMessage ->
-            if (!successMessage.isNullOrEmpty()) {
-                Toast.makeText(this, successMessage, Toast.LENGTH_SHORT).show()
-            }
-        }
-
-        viewModel.currentUser.observe(this) { user ->
-            if (user != null) {
-                // Login successful, navigate to main activity
-                val intent = Intent(this, MainActivity::class.java)
-                intent.putExtra("USER_ID", user.id)
-                startActivity(intent)
-                finish()
+                if (authState.isSuccess) {
+                    Toast.makeText(this@LoginActivity, "Login Successful", Toast.LENGTH_SHORT).show()
+                    val intent = Intent(this@LoginActivity, MainActivity::class.java)
+                    intent.putExtra("USER_ID", authState.user?.id.toString())
+                    startActivity(intent)
+                    finish()
+                }
             }
         }
     }

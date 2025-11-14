@@ -76,7 +76,7 @@ class CreateDonationActivity : AppCompatActivity() {
             if (validateInput(foodType, description, amountText, quantityText, location)) {
                 val donation = Donation(
                     id = 0, // Will be set by backend
-                    donor = viewModel.currentUser.value?.id ?: 0,
+                    donor = (viewModel.currentUser.value?.id ?: 0) as Int,
                     amount = amountText.toDouble(),
                     description = description,
                     foodType = foodType,

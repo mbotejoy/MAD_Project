@@ -1,18 +1,20 @@
 package com.example.mad_project.ui.theme
 
-// ui/RegisterActivity.kt
-import com.example.mad_project.data.models.RegisterRequest
-import com.example.mad_project.ui.theme.viewmodel.MainViewModel
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import com.example.mad_project.R
+import com.example.mad_project.data.models.RegisterRequest
+import com.example.mad_project.ui.theme.viewmodel.AuthViewModel
+import kotlinx.coroutines.launch
 
 class RegisterActivity : AppCompatActivity() {
 
-    private lateinit var viewModel: MainViewModel
+    private lateinit var viewModel: AuthViewModel
     private lateinit var etUsername: EditText
     private lateinit var etEmail: EditText
     private lateinit var etPassword: EditText
@@ -32,6 +34,7 @@ class RegisterActivity : AppCompatActivity() {
         initializeViews()
         setupViewModel()
         setupClickListeners()
+        observeViewModel()
     }
 
     private fun initializeViews() {
@@ -49,23 +52,25 @@ class RegisterActivity : AppCompatActivity() {
     }
 
     private fun setupViewModel() {
-        viewModel = ViewModelProvider(this)[MainViewModel::class.java]
+        viewModel = ViewModelProvider(this)[AuthViewModel::class.java]
+    }
 
-        viewModel.isLoading.observe(this) { isLoading ->
-            progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
-            btnRegister.isEnabled = !isLoading
-        }
+    private fun observeViewModel() {
+        lifecycleScope.launch {
+            viewModel.authState.collect { authState ->
+                progressBar.visibility = if (authState.isLoading) View.VISIBLE else View.GONE
+                btnRegister.isEnabled = !authState.isLoading
 
-        viewModel.successMessage.observe(this) { message ->
-            if (!message.isNullOrEmpty()) {
-                Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
-                finish() // Go back to login
-            }
-        }
+                if (authState.error != null) {
+                    Toast.makeText(this@RegisterActivity, authState.error, Toast.LENGTH_SHORT).show()
+                }
 
-        viewModel.errorMessage.observe(this) { message ->
-            if (!message.isNullOrEmpty()) {
-                Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+                if (authState.isSuccess) {
+                    Toast.makeText(this@RegisterActivity, "Registration Successful", Toast.LENGTH_SHORT).show()
+                    val intent = Intent(this@RegisterActivity, LoginActivity::class.java)
+                    startActivity(intent)
+                    finish()
+                }
             }
         }
     }
@@ -92,8 +97,7 @@ class RegisterActivity : AppCompatActivity() {
                     isDonor = isDonor,
                     isBeneficiary = isBeneficiary
                 )
-
-                viewModel.register(registerRequest)
+                viewModel.registerUser(registerRequest)
             }
         }
     }
@@ -106,7 +110,10 @@ class RegisterActivity : AppCompatActivity() {
         lastName: String,
         phone: String
     ): Boolean {
-        // Add validation logic here
+        if (username.isEmpty() || email.isEmpty() || password.isEmpty() || firstName.isEmpty() || lastName.isEmpty() || phone.isEmpty()) {
+            Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show()
+            return false
+        }
         return true
     }
 }
