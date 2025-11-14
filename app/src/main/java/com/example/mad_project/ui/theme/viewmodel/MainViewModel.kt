@@ -121,6 +121,10 @@ class MainViewModel : ViewModel() {
         }
     }
 
+    fun fetchAvailableDonations() {
+        loadDonations()
+    }
+
     fun createDonation(donation: Donation) {
         _isLoading.value = true
         _errorMessage.value = null
@@ -172,7 +176,7 @@ class MainViewModel : ViewModel() {
                 )
                 if (result is AppRepository.RepositoryResult.Success<*>) {
                     _successMessage.value = "Payment initiated! Check your phone."
-                } else if (result is AppRepository.RepositoryResult.Error) {
+                } else if (result is App.RepositoryResult.Error) {
                     _errorMessage.value = result.message
                 }
             } catch (e: Exception) {

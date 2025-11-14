@@ -9,6 +9,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.example.mad_project.R
 import com.example.mad_project.adapters.DonationAdapter
 import com.example.mad_project.data.models.Donation
@@ -21,6 +22,7 @@ class AvailableDonationsFragment : Fragment() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: DonationAdapter
     private lateinit var tvEmpty: View
+    private lateinit var swipeRefreshLayout: SwipeRefreshLayout
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -30,6 +32,7 @@ class AvailableDonationsFragment : Fragment() {
         val view = inflater.inflate(R.layout.fragment_donations, container, false)
         initializeViews(view)
         setupRecyclerView()
+        setupSwipeToRefresh()
         observeDonations()
         return view
     }
@@ -37,6 +40,7 @@ class AvailableDonationsFragment : Fragment() {
     private fun initializeViews(view: View) {
         recyclerView = view.findViewById(R.id.recyclerView)
         tvEmpty = view.findViewById(R.id.tvEmpty)
+        swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout)
     }
 
     private fun setupRecyclerView() {
@@ -47,10 +51,23 @@ class AvailableDonationsFragment : Fragment() {
         recyclerView.adapter = adapter
     }
 
+    private fun setupSwipeToRefresh() {
+        swipeRefreshLayout.setOnRefreshListener {
+            viewModel.fetchAvailableDonations()
+        }
+    }
+
     private fun observeDonations() {
         viewModel.availableDonations.observe(viewLifecycleOwner, Observer { donations ->
+            swipeRefreshLayout.isRefreshing = false
             adapter.updateDonations(donations)
-            tvEmpty.visibility = if (donations.isEmpty()) View.VISIBLE else View.GONE
+            if (donations.isEmpty()) {
+                recyclerView.visibility = View.GONE
+                tvEmpty.visibility = View.VISIBLE
+            } else {
+                recyclerView.visibility = View.VISIBLE
+                tvEmpty.visibility = View.GONE
+            }
         })
     }
 

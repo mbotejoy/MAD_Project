@@ -88,6 +88,7 @@ dependencies {
     // Room and WorkManager (from libs.versions.toml)
     implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.swiperefreshlayout)
     // Use KSP instead of annotationProcessor for Room with K2 compiler
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.work.runtime.ktx)
@@ -106,7 +107,3 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 }
-
-
-
-
