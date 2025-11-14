@@ -12,14 +12,11 @@ import java.util.*
 class CreateDonationActivity : AppCompatActivity() {
 
     private lateinit var viewModel: MainViewModel
-    private lateinit var etFoodType: EditText
-    private lateinit var etDescription: EditText
     private lateinit var etAmount: EditText
-    private lateinit var etQuantity: EditText
-    private lateinit var etLocation: EditText
     private lateinit var btnCreate: Button
     private lateinit var progressBar: ProgressBar
     private lateinit var tvError: TextView
+    private lateinit var tvDonorName: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,14 +28,11 @@ class CreateDonationActivity : AppCompatActivity() {
     }
 
     private fun initializeViews() {
-        etFoodType = findViewById(R.id.etFoodType)
-        etDescription = findViewById(R.id.etDescription)
         etAmount = findViewById(R.id.etAmount)
-        etQuantity = findViewById(R.id.etQuantity)
-        etLocation = findViewById(R.id.etLocation)
         btnCreate = findViewById(R.id.btnCreate)
         progressBar = findViewById(R.id.progressBar)
         tvError = findViewById(R.id.tvError)
+        tvDonorName = findViewById(R.id.tvDonorName)
     }
 
     private fun setupViewModel() {
@@ -63,25 +57,30 @@ class CreateDonationActivity : AppCompatActivity() {
                 hideError()
             }
         }
+
+        viewModel.currentUser.observe(this) { user ->
+            user?.let {
+                tvDonorName.text = "Donating as: ${it.name}"
+            }
+        }
     }
 
     private fun setupClickListeners() {
         btnCreate.setOnClickListener {
-            val foodType = etFoodType.text.toString().trim()
-            val description = etDescription.text.toString().trim()
             val amountText = etAmount.text.toString().trim()
-            val quantityText = etQuantity.text.toString().trim()
-            val location = etLocation.text.toString().trim()
 
-            if (validateInput(foodType, description, amountText, quantityText, location)) {
+            if (validateInput(amountText)) {
+                // Safely get the user ID. The validateInput function now checks for a logged-in user.
+                val donorId = viewModel.currentUser.value!!.id
+
                 val donation = Donation(
                     id = 0, // Will be set by backend
-                    donor = (viewModel.currentUser.value?.id ?: 0) as Int,
+                    donor = donorId,
                     amount = amountText.toDouble(),
-                    description = description,
-                    foodType = foodType,
-                    quantity = quantityText.toInt(),
-                    location = location,
+                    description = "Monetary Donation", // Default value
+                    foodType = "Cash", // Default value
+                    quantity = 1, // Default value for a single transaction
+                    location = "N/A", // Not applicable for cash donations
                     createdAt = Date().toString(),
                     status = "available"
                 )
@@ -91,28 +90,13 @@ class CreateDonationActivity : AppCompatActivity() {
         }
     }
 
-    private fun validateInput(
-        foodType: String,
-        description: String,
-        amountText: String,
-        quantityText: String,
-        location: String
-    ): Boolean {
+    private fun validateInput(amountText: String): Boolean {
         // Reset errors
-        etFoodType.error = null
-        etDescription.error = null
         etAmount.error = null
-        etQuantity.error = null
-        etLocation.error = null
         hideError()
 
-        if (foodType.isEmpty()) {
-            etFoodType.error = "Food type is required"
-            return false
-        }
-
-        if (description.isEmpty()) {
-            etDescription.error = "Description is required"
+        if (viewModel.currentUser.value == null) {
+            showError("You must be logged in to make a donation.")
             return false
         }
 
@@ -132,27 +116,6 @@ class CreateDonationActivity : AppCompatActivity() {
             return false
         }
 
-        if (quantityText.isEmpty()) {
-            etQuantity.error = "Quantity is required"
-            return false
-        }
-
-        try {
-            val quantity = quantityText.toInt()
-            if (quantity <= 0) {
-                etQuantity.error = "Quantity must be greater than 0"
-                return false
-            }
-        } catch (e: NumberFormatException) {
-            etQuantity.error = "Please enter a valid quantity"
-            return false
-        }
-
-        if (location.isEmpty()) {
-            etLocation.error = "Location is required"
-            return false
-        }
-
         return true
     }
 
@@ -164,6 +127,4 @@ class CreateDonationActivity : AppCompatActivity() {
     private fun hideError() {
         tvError.visibility = android.view.View.GONE
     }
-
-
 }

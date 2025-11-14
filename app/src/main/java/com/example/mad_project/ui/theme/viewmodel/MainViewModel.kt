@@ -8,11 +8,13 @@ import com.example.mad_project.data.models.AppRepository
 import com.example.mad_project.data.models.Donation
 import com.example.mad_project.data.models.LoginRequest
 import com.example.mad_project.data.models.RegisterRequest
+import com.example.mad_project.data.models.SessionManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import com.example.mad_project.data.models.User
+
 data class AuthState(
     val isLoading: Boolean = false,
     val isSuccess: Boolean = false,
@@ -33,6 +35,14 @@ class AuthViewModel : ViewModel() {
     private val _authState = MutableStateFlow(AuthState())
     val authState: StateFlow<AuthState> = _authState.asStateFlow()
 
+    init {
+        // If a user is already saved in the session, update the state
+        val loggedInUser = SessionManager.getUser()
+        if (loggedInUser != null) {
+            _authState.value = AuthState(isSuccess = true, user = loggedInUser)
+        }
+    }
+
     // Registration function
     fun registerUser(registerRequest: RegisterRequest) {
         viewModelScope.launch {
@@ -44,42 +54,27 @@ class AuthViewModel : ViewModel() {
                     response.body()?.let { registerResponse ->
                         if (registerResponse.status == "success") {
                             registerResponse.user?.let { user ->
-                                // Registration successful
-                                _authState.value = AuthState(
-                                    isSuccess = true,
-                                    user = UserState(
-                                        id = user.id,
-                                        email = user.email,
-                                        name = user.username ?: "",
-                                        token = "" // No token in register response
-                                    )
+                                val userState = UserState(
+                                    id = user.id,
+                                    email = user.email,
+                                    name = user.username ?: "",
+                                    token = "" // No token in register response
                                 )
+                                SessionManager.saveUser(userState) // Save user to session
+                                _authState.value = AuthState(isSuccess = true, user = userState)
                             } ?: run {
                                 _authState.value = AuthState(error = "Registration successful, but user data is missing.")
                             }
                         } else {
-                            _authState.value = AuthState(
-                                error = registerResponse.message ?: "Registration failed"
-                            )
+                            _authState.value = AuthState(error = registerResponse.message ?: "Registration failed")
                         }
-                    } ?: run {
-                        _authState.value = AuthState(error = "An unexpected error occurred: Empty response body")
                     }
                 } else {
-                    // Handle HTTP error (400, 500, etc.)
-                    val errorMessage = when (response.code()) {
-                        400 -> "Bad request - check your input"
-                        409 -> "User already exists"
-                        500 -> "Server error"
-                        else -> "Registration failed: ${response.message()}"
-                    }
+                    val errorMessage = "Registration failed: ${response.message()}"
                     _authState.value = AuthState(error = errorMessage)
                 }
             } catch (e: Exception) {
-                // Handle network errors
-                _authState.value = AuthState(
-                    error = "Network error: ${e.message ?: "Check your connection"}"
-                )
+                _authState.value = AuthState(error = "Network error: ${e.message ?: "Check your connection"}")
             } finally {
                 _authState.value = _authState.value.copy(isLoading = false)
             }
@@ -97,62 +92,35 @@ class AuthViewModel : ViewModel() {
                     response.body()?.let { loginResponse ->
                         if (loginResponse.status == "success") {
                             loginResponse.user?.let { user ->
-                                // Login successful
-                                _authState.value = AuthState(
-                                    isSuccess = true,
-                                    user = UserState(
-                                        id = user.id,
-                                        email = user.email,
-                                        name = user.username ?: "",
-                                        token = loginResponse.token ?: ""
-                                    )
+                                val userState = UserState(
+                                    id = user.id,
+                                    email = user.email,
+                                    name = user.username ?: "",
+                                    token = loginResponse.token ?: ""
                                 )
+                                SessionManager.saveUser(userState) // Save user to session
+                                _authState.value = AuthState(isSuccess = true, user = userState)
                             } ?: run {
                                 _authState.value = AuthState(error = "Login successful, but user data is missing.")
                             }
                         } else {
-                            // Business logic error from server
-                            _authState.value = AuthState(
-                                error = loginResponse.message ?: "Login failed"
-                            )
+                            _authState.value = AuthState(error = loginResponse.message ?: "Login failed")
                         }
-                    } ?: run {
-                        // Handle case where response body is null for a successful call
-                        _authState.value = AuthState(error = "An unexpected error occurred: Empty response body")
                     }
                 } else {
-                    // Handle HTTP error
-                    val errorMessage = when (response.code()) {
-                        401 -> "Invalid email or password"
-                        404 -> "User not found"
-                        500 -> "Server error"
-                        else -> "Login failed: ${response.message()}"
-                    }
+                     val errorMessage = "Login failed: ${response.message()}"
                     _authState.value = AuthState(error = errorMessage)
                 }
             } catch (e: Exception) {
-                // Handle network errors
-                _authState.value = AuthState(
-                    error = "Network error: ${e.message ?: "Check your connection"}"
-                )
+                _authState.value = AuthState(error = "Network error: ${e.message ?: "Check your connection"}")
             } finally {
                 _authState.value = _authState.value.copy(isLoading = false)
             }
         }
     }
 
-    // Clear error state
-    fun clearError() {
-        _authState.value = AuthState(error = null)
-    }
-
-    // Reset success state
-    fun resetSuccess() {
-        _authState.value = AuthState(isSuccess = false)
-    }
-
-    // Logout function
     fun logout() {
+        SessionManager.clearSession() // Clear user from session
         _authState.value = AuthState()
     }
 }
@@ -173,10 +141,12 @@ class MainViewModel : ViewModel() {
     private val _errorMessage = MutableLiveData<String>()
     val errorMessage: LiveData<String> = _errorMessage
 
-    private val _currentUser = MutableLiveData<UserState>()
-    val currentUser: LiveData<UserState> = _currentUser
+    private val _currentUser = MutableLiveData<UserState?>()
+    val currentUser: LiveData<UserState?> = _currentUser
 
     init {
+        // Load the current user from the session as soon as the ViewModel is created
+        _currentUser.postValue(SessionManager.getUser())
         loadDonations()
     }
 
@@ -188,7 +158,7 @@ class MainViewModel : ViewModel() {
                     _availableDonations.postValue(response.body())
                 }
             } catch (e: Exception) {
-                // Handle error
+                _errorMessage.postValue("Failed to load donations: ${e.message}")
             }
         }
     }
@@ -202,7 +172,7 @@ class MainViewModel : ViewModel() {
                     _successMessage.postValue("Donation created successfully")
                     loadDonations() // Refresh the list of donations
                 } else {
-                    _errorMessage.postValue("Failed to create donation")
+                    _errorMessage.postValue("Failed to create donation: ${response.errorBody()?.string()}")
                 }
             } catch (e: Exception) {
                 _errorMessage.postValue("An error occurred: ${e.message}")
