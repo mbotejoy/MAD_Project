@@ -13,7 +13,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.mad_project.R
 import com.example.mad_project.adapters.DonationAdapter
 import com.example.mad_project.data.models.Donation
-import com.example.mad_project.viewmodel.MainViewModel
+import com.example.mad_project.ui.theme.viewmodel.MainViewModel
 import kotlinx.coroutines.launch
 
 class MyDonationsFragment : Fragment() {

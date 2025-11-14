@@ -1,8 +1,9 @@
 package com.example.mad_project.data.models
 
-class user {
-}
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
 
+@Parcelize
 data class User(
     val id: Int,
     val email: String,
@@ -13,4 +14,4 @@ data class User(
     val dateJoined: String,
     val isDonor: Boolean = false,
     val isBeneficiary: Boolean = false
-)
+) : Parcelable

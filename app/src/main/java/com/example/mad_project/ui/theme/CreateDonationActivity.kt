@@ -6,7 +6,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import com.example.mad_project.R
 import com.example.mad_project.data.models.Donation
-import com.example.mad_project.viewmodel.MainViewModel
+import com.example.mad_project.ui.theme.viewmodel.MainViewModel
 import java.util.*
 
 class CreateDonationActivity : AppCompatActivity() {

@@ -48,7 +48,23 @@ android {
     buildFeatures {
         compose = true
     }
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "META-INF/DEPENDENCIES"
+            excludes += "META-INF/LICENSE"
+            excludes += "META-INF/LICENSE.txt"
+            excludes += "META-INF/license.txt"
+            excludes += "META-INF/NOTICE"
+            excludes += "META-INF/NOTICE.txt"
+            excludes += "META-INF/notice.txt"
+            excludes += "META-INF/INDEX.LIST"
+            excludes += "META-INF/io.netty.versions.properties"
+            excludes += "META-INF/*.kotlin_module"
+        }
+    }
 }
+
 dependencies {
     // Keep your core dependencies, but update to more recent stable versions
     implementation("androidx.core:core-ktx:1.13.1")
@@ -89,14 +105,15 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.swiperefreshlayout)
+    implementation(libs.firebase.appdistribution.gradle)
     // Use KSP instead of annotationProcessor for Room with K2 compiler
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.work.runtime.ktx)
 
     // Firebase (use BOM to manage versions)
-    implementation(platform("com.google.firebase:firebase-bom:33.2.0"))
-    implementation("com.google.firebase:firebase-firestore")
-    implementation("com.google.firebase:firebase-analytics")
+    //implementation(platform("com.google.firebase:firebase-bom:33.2.0"))
+    //implementation("com.google.firebase:firebase-firestore")
+    //implementation("com.google.firebase:firebase-analytics")
 
     // Test dependencies
     testImplementation(libs.junit)

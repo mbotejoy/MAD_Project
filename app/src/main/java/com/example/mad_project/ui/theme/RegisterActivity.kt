@@ -2,7 +2,7 @@ package com.example.mad_project.ui.theme
 
 // ui/RegisterActivity.kt
 import com.example.mad_project.data.models.RegisterRequest
-import com.example.mad_project.viewmodel.MainViewModel
+import com.example.mad_project.ui.theme.viewmodel.MainViewModel
 import android.os.Bundle
 import android.view.View
 import android.widget.*

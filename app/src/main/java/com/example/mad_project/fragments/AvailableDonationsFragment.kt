@@ -14,7 +14,7 @@ import com.example.mad_project.R
 import com.example.mad_project.adapters.DonationAdapter
 import com.example.mad_project.data.models.Donation
 import com.example.mad_project.ui.theme.DonationDetailsDialog
-import com.example.mad_project.viewmodel.MainViewModel
+import com.example.mad_project.ui.theme.viewmodel.MainViewModel
 
 class AvailableDonationsFragment : Fragment() {
 
@@ -53,7 +53,7 @@ class AvailableDonationsFragment : Fragment() {
 
     private fun setupSwipeToRefresh() {
         swipeRefreshLayout.setOnRefreshListener {
-            viewModel.fetchAvailableDonations()
+            viewModel.loadDonations()
         }
     }
 

@@ -10,7 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import com.example.mad_project.data.models.MainActivity
 import com.example.mad_project.R
-import com.example.mad_project.viewmodel.MainViewModel
+import com.example.mad_project.ui.theme.viewmodel.MainViewModel
 import com.google.android.material.textfield.TextInputEditText
 
 class LoginActivity : AppCompatActivity() {

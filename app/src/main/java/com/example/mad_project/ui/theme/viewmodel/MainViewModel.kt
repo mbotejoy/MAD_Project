@@ -1,241 +1,156 @@
-package com.example.mad_project.viewmodel
+package com.example.mad_project.ui.theme.viewmodel
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MediatorLiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.mad_project.data.models.Donation
-import com.example.mad_project.data.models.MpesaPaymentRequest
+import com.example.mad_project.data.models.AppRepository
+import com.example.mad_project.data.models.LoginRequest
 import com.example.mad_project.data.models.RegisterRequest
-import com.example.mad_project.data.models.User
-import com.example.mad_project.data.repository.AppRepository
+import com.example.mad_project.data.models.LoginResponse
+import com.example.mad_project.data.models.RegisterResponse
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class MainViewModel : ViewModel() {
+data class AuthState(
+    val isLoading: Boolean = false,
+    val isSuccess: Boolean = false,
+    val error: String? = null,
+    val user: UserState? = null
+)
 
+data class UserState(
+    val id: Int,
+    val email: String,
+    val name: String,
+    val token: String?
+)
+
+class AuthViewModel : ViewModel() {
     private val repository = AppRepository()
 
-    // LiveData for current user
-    private val _currentUser = MutableLiveData<User?>()
-    val currentUser: LiveData<User?> get() = _currentUser
+    private val _authState = MutableStateFlow(AuthState())
+    val authState: StateFlow<AuthState> = _authState.asStateFlow()
 
-    // LiveData for all donations
-    private val _donations = MutableLiveData<List<Donation>>(emptyList())
-    val donations: LiveData<List<Donation>> get() = _donations
-
-    // Loading state
-    private val _isLoading = MutableLiveData<Boolean>()
-    val isLoading: LiveData<Boolean> get() = _isLoading
-
-    // Error messages
-    private val _errorMessage = MutableLiveData<String?>()
-    val errorMessage: LiveData<String?> get() = _errorMessage
-
-    // Success messages
-    private val _successMessage = MutableLiveData<String?>()
-    val successMessage: LiveData<String?> get() = _successMessage
-
-    // Computed property for available donations
-    val availableDonations: LiveData<List<Donation>> = MediatorLiveData<List<Donation>>().apply {
-        addSource(_donations) { donationsList ->
-            value = donationsList.filter { it.status == "available" }
-        }
-    }
-
-    // Computed property for user's donations
-    val myDonations: LiveData<List<Donation>> = MediatorLiveData<List<Donation>>().apply {
-        val updateMyDonations = {
-            val currentDonations = _donations.value ?: emptyList()
-            val userId = _currentUser.value?.id
-            value = if (userId != null) {
-                currentDonations.filter { it.donor == userId }
-            } else {
-                emptyList()
-            }
-        }
-
-        addSource(_donations) { updateMyDonations() }
-        addSource(_currentUser) { updateMyDonations() }
-    }
-
-    // Authentication methods
-    fun login(username: String, password: String) {
-        _isLoading.value = true
-        _errorMessage.value = null
+    // Registration function
+    fun registerUser(email: String, password: String, name: String) {
         viewModelScope.launch {
+            _authState.value = AuthState(isLoading = true)
             try {
-                val result = repository.login(username, password)
-                if (result is AppRepository.RepositoryResult.Success<*>) {
-                    _currentUser.value = result.data as User?
-                    _successMessage.value = "Login successful!"
-                    loadDonations()
-                } else if (result is AppRepository.RepositoryResult.Error) {
-                    _errorMessage.value = result.message
+                val response = repository.register(RegisterRequest(
+                    username, email, password,
+                    firstName = TODO(),
+                    lastName = TODO(),
+                    phoneNumber = TODO(),
+                    isDonor = TODO(),
+                    isBeneficiary = TODO()
+                ))
+
+                if (response.isSuccessful) {
+                    response.body()?.let { registerResponse ->
+                        if (registerResponse.status == "success") {
+                            // Registration successful
+                            _authState.value = AuthState(
+                                isSuccess = true,
+                                user = UserState(
+                                    id = registerResponse.user.id,
+                                    email = registerResponse.user.email,
+                                    name = registerResponse.user.username ?: "",
+                                    token = "" // No token in register response
+                                )
+                            )
+                        } else {
+                            _authState.value = AuthState(
+                                error = registerResponse.message ?: "Registration failed"
+                            )
+                        }
+                    } ?: run {
+                        _authState.value = AuthState(error = "An unexpected error occurred: Empty response body")
+                    }
+                } else {
+                    // Handle HTTP error (400, 500, etc.)
+                    val errorMessage = when (response.code()) {
+                        400 -> "Bad request - check your input"
+                        409 -> "User already exists"
+                        500 -> "Server error"
+                        else -> "Registration failed: ${response.message()}"
+                    }
+                    _authState.value = AuthState(error = errorMessage)
                 }
             } catch (e: Exception) {
-                _errorMessage.value = "Login failed: ${e.message}"
-            } finally {
-                _isLoading.value = false
-            }
-        }
-    }
-
-    fun register(registerRequest: RegisterRequest) {
-        _isLoading.value = true
-        _errorMessage.value = null
-        viewModelScope.launch {
-            try {
-                val result = repository.register(registerRequest)
-                if (result is AppRepository.RepositoryResult.Success<*>) {
-                    _currentUser.value = result.data as User?
-                    _successMessage.value = "Registration successful!"
-                } else if (result is AppRepository.RepositoryResult.Error) {
-                    _errorMessage.value = result.message
-                }
-            } catch (e: Exception) {
-                _errorMessage.value = "Registration failed: ${e.message}"
-            } finally {
-                _isLoading.value = false
-            }
-        }
-    }
-
-    // Donation methods
-    fun loadDonations() {
-        _isLoading.value = true
-        _errorMessage.value = null
-        viewModelScope.launch {
-            try {
-                val result = repository.getDonations()
-                if (result is AppRepository.RepositoryResult.Success<*>) {
-                    _donations.value = result.data as List<Donation>?
-                } else if (result is AppRepository.RepositoryResult.Error) {
-                    _errorMessage.value = result.message
-                }
-            } catch (e: Exception) {
-                _errorMessage.value = "Failed to load donations: ${e.message}"
-            } finally {
-                _isLoading.value = false
-            }
-        }
-    }
-
-    fun fetchAvailableDonations() {
-        loadDonations()
-    }
-
-    fun createDonation(donation: Donation) {
-        _isLoading.value = true
-        _errorMessage.value = null
-        viewModelScope.launch {
-            try {
-                val result = repository.createDonation(donation)
-                if (result is AppRepository.RepositoryResult.Success<*>) {
-                    loadDonations()
-                    _successMessage.value = "Donation created successfully!"
-                } else if (result is AppRepository.RepositoryResult.Error) {
-                    _errorMessage.value = result.message
-                }
-            } catch (e: Exception) {
-                _errorMessage.value = "Failed to create donation: ${e.message}"
-            } finally {
-                _isLoading.value = false
-            }
-        }
-    }
-
-    fun updateDonation(donationId: Int, donation: Donation) {
-        _isLoading.value = true
-        _errorMessage.value = null
-        viewModelScope.launch {
-            try {
-                val result = repository.updateDonation(donationId, donation)
-                if (result is AppRepository.RepositoryResult.Success<*>) {
-                    loadDonations()
-                    _successMessage.value = "Donation updated successfully!"
-                } else if (result is AppRepository.RepositoryResult.Error) {
-                    _errorMessage.value = result.message
-                }
-            } catch (e: Exception) {
-                _errorMessage.value = "Failed to update donation: ${e.message}"
-            } finally {
-                _isLoading.value = false
-            }
-        }
-    }
-
-    // MPESA Payment
-    fun makeMpesaPayment(phoneNumber: String, amount: Double, donationId: Int? = null) {
-        _isLoading.value = true
-        _errorMessage.value = null
-        viewModelScope.launch {
-            try {
-                val result = repository.initiateMpesaPayment(
-                    MpesaPaymentRequest(phoneNumber, amount, donationId)
+                // Handle network errors
+                _authState.value = AuthState(
+                    error = "Network error: ${e.message ?: "Check your connection"}"
                 )
-                if (result is AppRepository.RepositoryResult.Success<*>) {
-                    _successMessage.value = "Payment initiated! Check your phone."
-                } else if (result is App.RepositoryResult.Error) {
-                    _errorMessage.value = result.message
-                }
-            } catch (e: Exception) {
-                _errorMessage.value = "Payment failed: ${e.message}"
             } finally {
-                _isLoading.value = false
+                _authState.value = _authState.value.copy(isLoading = false)
             }
         }
     }
 
-    // User management
-    fun setCurrentUser(user: User) {
-        _currentUser.value = user
+    // Login function
+    fun loginUser(email: String, password: String) {
+        viewModelScope.launch {
+            _authState.value = AuthState(isLoading = true)
+            try {
+                val response = repository.login(LoginRequest(email, password))
+
+                if (response.isSuccessful) {
+                    response.body()?.let { loginResponse ->
+                        if (loginResponse.token == "success") {
+                            // Login successful
+                            _authState.value = AuthState(
+                                isSuccess = true,
+                                user = UserState(
+                                    id = loginResponse.user.id,
+                                    email = loginResponse.user.email,
+                                    name = loginResponse.user.username ?: "",
+                                    token = loginResponse.token ?: ""
+                                )
+                            )
+                        } else {
+                            // Business logic error from server
+                            _authState.value = AuthState(
+                                error = loginResponse.message ?: "Login failed"
+                            )
+                        }
+                    } ?: run {
+                        // Handle case where response body is null for a successful call
+                        _authState.value = AuthState(error = "An unexpected error occurred: Empty response body")
+                    }
+                } else {
+                    // Handle HTTP error
+                    val errorMessage = when (response.code()) {
+                        401 -> "Invalid email or password"
+                        404 -> "User not found"
+                        500 -> "Server error"
+                        else -> "Login failed: ${response.message()}"
+                    }
+                    _authState.value = AuthState(error = errorMessage)
+                }
+            } catch (e: Exception) {
+                // Handle network errors
+                _authState.value = AuthState(
+                    error = "Network error: ${e.message ?: "Check your connection"}"
+                )
+            } finally {
+                _authState.value = _authState.value.copy(isLoading = false)
+            }
+        }
     }
 
+    // Clear error state
+    fun clearError() {
+        _authState.value = AuthState(error = null)
+    }
+
+    // Reset success state
+    fun resetSuccess() {
+        _authState.value = AuthState(isSuccess = false)
+    }
+
+    // Logout function
     fun logout() {
-        _currentUser.value = null
-        _donations.value = emptyList()
-        _successMessage.value = "Logged out successfully"
-    }
-
-    fun clearMessages() {
-        _errorMessage.value = null
-        _successMessage.value = null
-    }
-
-    // Load sample data for testing
-    fun loadSampleData() {
-        _isLoading.value = true
-        viewModelScope.launch {
-            kotlinx.coroutines.delay(1000)
-
-            val sampleDonations = listOf(
-                Donation(
-                    id = 1,
-                    donor = 1,
-                    amount = 50.0,
-                    description = "Fresh vegetables from local farm",
-                    foodType = "Vegetables",
-                    quantity = 10,
-                    location = "Nairobi",
-                    createdAt = "2024-01-15",
-                    status = "available"
-                ),
-                Donation(
-                    id = 2,
-                    donor = 2,
-                    amount = 75.0,
-                    description = "Assorted fruits package",
-                    foodType = "Fruits",
-                    quantity = 8,
-                    location = "Kisumu",
-                    createdAt = "2024-01-16",
-                    status = "available"
-                )
-            )
-
-            _donations.value = sampleDonations
-            _isLoading.value = false
-        }
+        _authState.value = AuthState()
     }
 }
