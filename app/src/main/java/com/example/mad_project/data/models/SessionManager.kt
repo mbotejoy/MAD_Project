@@ -1,4 +1,3 @@
-
 package com.example.mad_project.data.models
 
 import android.content.Context
@@ -26,7 +25,13 @@ object SessionManager {
     fun getUser(): UserState? {
         val userJson = sharedPreferences.getString(KEY_USER, null)
         return if (userJson != null) {
-            gson.fromJson(userJson, UserState::class.java)
+            try {
+                gson.fromJson(userJson, UserState::class.java)
+            } catch (e: Exception) {
+                // Data might be corrupted from a previous version, clear it.
+                clearSession()
+                null
+            }
         } else {
             null
         }

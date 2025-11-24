@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.example.mad_project.R
+import com.example.mad_project.data.models.SessionManager
 import com.example.mad_project.ui.theme.viewmodel.AuthViewModel
 import com.google.android.material.textfield.TextInputEditText
 import kotlinx.coroutines.launch
@@ -26,6 +27,19 @@ class LoginActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Check session status BEFORE setting the content view.
+        // SessionManager is initialized in MainApplication.
+        val user = SessionManager.getUser()
+        if (user != null) {
+            // If user is logged in, go straight to MainActivity
+            val intent = Intent(this, MainActivity::class.java)
+            startActivity(intent)
+            finish() // Finish LoginActivity so the user cannot navigate back to it
+            return   // Return here to prevent the rest of onCreate from running
+        }
+
+        // If no user, proceed with setting up the LoginActivity UI
         setContentView(R.layout.activity_login)
 
         initializeViews()
@@ -45,11 +59,12 @@ class LoginActivity : AppCompatActivity() {
 
     private fun setupViewModel() {
         viewModel = ViewModelProvider(this)[AuthViewModel::class.java]
+        viewModel.checkAuthState()
     }
 
     private fun setupClickListeners() {
         btnLogin.setOnClickListener {
-            val email = etUsername.text.toString().trim() // Change variable name to email
+            val email = etUsername.text.toString().trim()
             val password = etPassword.text.toString().trim()
 
             if (email.isEmpty() || password.isEmpty()) {
@@ -57,7 +72,7 @@ class LoginActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            viewModel.loginUser(email, password) // Now passing email
+            viewModel.loginUser(email, password)
         }
         tvRegister.setOnClickListener {
             val intent = Intent(this, RegisterActivity::class.java)
@@ -76,13 +91,12 @@ class LoginActivity : AppCompatActivity() {
                 } else {
                     hideError()
                 }
-                // Add detailed logging
+
                 println("AUTH STATE - isLoading: ${authState.isLoading}, isSuccess: ${authState.isSuccess}, user: ${authState.user}")
 
                 if (authState.isSuccess && authState.user != null) {
                     Toast.makeText(this@LoginActivity, "Login Successful", Toast.LENGTH_SHORT).show()
                     val intent = Intent(this@LoginActivity, MainActivity::class.java)
-                    intent.putExtra("USER_ID", authState.user.id.toString())
                     startActivity(intent)
                     finish()
                 }

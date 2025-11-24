@@ -57,6 +57,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupViewModels() {
         mainViewModel = ViewModelProvider(this)[MainViewModel::class.java]
+        mainViewModel.loadCurrentUser()
         authViewModel = ViewModelProvider(this)[AuthViewModel::class.java]
         mainViewModel.loadDonations()
     }
@@ -105,3 +106,5 @@ class MainActivity : AppCompatActivity() {
         }
     }
 }
+
+

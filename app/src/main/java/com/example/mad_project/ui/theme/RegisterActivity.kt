@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.example.mad_project.R
 import com.example.mad_project.data.models.RegisterRequest
+import com.example.mad_project.data.models.SessionManager
 import com.example.mad_project.ui.theme.viewmodel.AuthViewModel
 import kotlinx.coroutines.launch
 
@@ -29,12 +30,15 @@ class RegisterActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        SessionManager.init(this)
         setContentView(R.layout.activity_register)
 
         initializeViews()
         setupViewModel()
         setupClickListeners()
         observeViewModel()
+
+
     }
 
     private fun initializeViews() {

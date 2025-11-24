@@ -24,8 +24,8 @@ data class AuthState(
 
 data class UserState(
     val id: Int,
-    val email: String,
-    val name: String,
+    val email: String?,
+    val name: String?,
     val token: String?
 )
 
@@ -35,13 +35,19 @@ class AuthViewModel : ViewModel() {
     private val _authState = MutableStateFlow(AuthState())
     val authState: StateFlow<AuthState> = _authState.asStateFlow()
 
-    init {
-        // If a user is already saved in the session, update the state
-        val loggedInUser = SessionManager.getUser()
-        if (loggedInUser != null) {
-            _authState.value = AuthState(isSuccess = true, user = loggedInUser)
-        }
+//    init {
+//        // If a user is already saved in the session, update the state
+//        val loggedInUser = SessionManager.getUser()
+//        if (loggedInUser != null) {
+//            _authState.value = AuthState(isSuccess = true, user = loggedInUser)
+//        }
+//    }
+fun checkAuthState() {
+    val loggedInUser = SessionManager.getUser()
+    if (loggedInUser != null) {
+        _authState.value = AuthState(isSuccess = true, user = loggedInUser)
     }
+}
 
     // Registration function
     fun registerUser(registerRequest: RegisterRequest) {
@@ -57,7 +63,7 @@ class AuthViewModel : ViewModel() {
                                 val userState = UserState(
                                     id = user.id,
                                     email = user.email,
-                                    name = user.username ?: "",
+                                    name = user.username,
                                     token = "" // No token in register response
                                 )
                                 SessionManager.saveUser(userState) // Save user to session
@@ -95,8 +101,8 @@ class AuthViewModel : ViewModel() {
                                 val userState = UserState(
                                     id = user.id,
                                     email = user.email,
-                                    name = user.username ?: "",
-                                    token = loginResponse.token ?: ""
+                                    name = user.username,
+                                    token = loginResponse.token
                                 )
                                 SessionManager.saveUser(userState) // Save user to session
                                 _authState.value = AuthState(isSuccess = true, user = userState)
@@ -146,9 +152,14 @@ class MainViewModel : ViewModel() {
 
     init {
         // Load the current user from the session as soon as the ViewModel is created
-        _currentUser.postValue(SessionManager.getUser())
+       // _currentUser.postValue(SessionManager.getUser())
         loadDonations()
     }
+
+    fun loadCurrentUser() {
+        _currentUser.postValue(SessionManager.getUser())
+    }
+
 
     fun loadDonations() {
         viewModelScope.launch {
